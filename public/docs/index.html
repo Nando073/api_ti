@@ -22,7 +22,11 @@
                 deepLinking: true,
                 showExtensions: true,
                 showCommonExtensions: true,
-                docExpansion: "none"
+                docExpansion: "none",
+                // 👇 Agrega esta línea para forzar la URL correcta
+                servers: [
+                    { url: "https://apiti-production.up.railway.app/api" }
+                ]
             });
             window.ui = ui;
         };
