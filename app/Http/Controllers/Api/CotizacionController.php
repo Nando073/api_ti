@@ -41,11 +41,18 @@ class CotizacionController extends Controller
                 // 1. Crear la cotización
                 $cotizacion = Cotizacion::create($data);
 
-                // 2. Crear los detalles
-                foreach ($data['detalles'] as $detalleData) {
-                    $detalleData['id_cotizacion'] = $cotizacion->id_cotizacion;
-                    $detalleData['estado'] = 1;
-                    DetalleCotizacion::create($detalleData);
+                // 2. Crear los detalles SOLO si se enviaron
+                if (isset($data['detalles']) && is_array($data['detalles'])) {
+                    foreach ($data['detalles'] as $detalleData) {
+                        // Validar que tenga al menos un campo (equipo o repuesto)
+                        if (empty($detalleData['id_equipo']) && empty($detalleData['id_repuesto'])) {
+                            continue; // Saltar este detalle si no tiene equipo ni repuesto
+                        }
+
+                        $detalleData['id_cotizacion'] = $cotizacion->id_cotizacion;
+                        $detalleData['estado'] = 1;
+                        DetalleCotizacion::create($detalleData);
+                    }
                 }
 
                 return $cotizacion;
@@ -109,18 +116,24 @@ class CotizacionController extends Controller
             $data = $request->validated();
 
             DB::transaction(function () use ($cotizacion, $data) {
-                // Actualizar cabecera
+                // 1. Actualizar cabecera
                 $cotizacion->update($data);
 
-                // Desactivar detalles antiguos
+                // 2. Desactivar detalles antiguos (si existían)
                 DetalleCotizacion::where('id_cotizacion', $cotizacion->id_cotizacion)
                     ->update(['estado' => 0]);
 
-                // Crear nuevos detalles
-                foreach ($data['detalles'] as $detalleData) {
-                    $detalleData['id_cotizacion'] = $cotizacion->id_cotizacion;
-                    $detalleData['estado'] = 1;
-                    DetalleCotizacion::create($detalleData);
+                // 3. Crear nuevos detalles SOLO si se enviaron
+                if (isset($data['detalles']) && is_array($data['detalles'])) {
+                    foreach ($data['detalles'] as $detalleData) {
+                        if (empty($detalleData['id_equipo']) && empty($detalleData['id_repuesto'])) {
+                            continue;
+                        }
+
+                        $detalleData['id_cotizacion'] = $cotizacion->id_cotizacion;
+                        $detalleData['estado'] = 1;
+                        DetalleCotizacion::create($detalleData);
+                    }
                 }
             });
 
@@ -154,9 +167,7 @@ class CotizacionController extends Controller
             }
 
             DB::transaction(function () use ($cotizacion) {
-                // Desactivar cotización
                 $cotizacion->update(['estado' => 0]);
-                // Desactivar detalles
                 DetalleCotizacion::where('id_cotizacion', $cotizacion->id_cotizacion)
                     ->update(['estado' => 0]);
             });
@@ -165,7 +176,7 @@ class CotizacionController extends Controller
                 'success' => true,
                 'message' => 'Cotización y detalles eliminados correctamente (estado = 0).'
             ], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error al eliminar la cotización.',
