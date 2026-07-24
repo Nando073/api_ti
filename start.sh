@@ -1,18 +1,17 @@
 #!/bin/bash
-set -e
 
 echo "=== Generando clave de aplicación ==="
 php artisan key:generate --force
 
 echo "=== Limpiando cachés ==="
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-php artisan cache:clear
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan cache:clear || true
 
-echo "=== Generando documentación Swagger con URL correcta ==="
-# Forzar la URL correcta en el JSON (usa la variable APP_URL de Render)
-php artisan scramble:export --path=public/docs/api-docs.json
+echo "=== Generando documentación Swagger ==="
+# Si falla, no detiene el inicio del servidor
+php artisan scramble:export --path=public/docs/api-docs.json || true
 
 echo "=== Iniciando servidor ==="
 php artisan serve --host=0.0.0.0 --port=10000

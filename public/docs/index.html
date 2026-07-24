@@ -12,7 +12,8 @@
     <script>
         window.onload = function() {
             const ui = SwaggerUIBundle({
-                url: "api-docs.json",
+                // 👇 ELIMINA ESTA LÍNEA
+                // url: "api-docs.json",
                 dom_id: '#swagger-ui',
                 presets: [
                     SwaggerUIBundle.presets.apis,
@@ -23,7 +24,7 @@
                 showExtensions: true,
                 showCommonExtensions: true,
                 docExpansion: "none",
-                // 👇 Agrega esta línea para forzar la URL correcta
+                // 👇 ESTO ES LO QUE USA AHORA
                 servers: [
                     { url: "https://apiti-production.up.railway.app/api" }
                 ]
